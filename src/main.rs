@@ -1,4 +1,4 @@
-use std::{fmt::Display, mem::MaybeUninit};
+use std::{fmt::Display, mem::MaybeUninit, hint::black_box};
 
 use cudarc::driver::{
     sys::{
@@ -32,8 +32,8 @@ impl<T: ToString> Display for PrintWithDots<T> {
 }
 
 unsafe fn _main() {
-    // cuda context is required
-    let _cuda = CudaDeviceBuilder::new(0).build().unwrap();
+    // cuda context is required, blackbox to NOT optimize it away
+    let _cuda = black_box(CudaDeviceBuilder::new(0).build().unwrap());
     let mut device_count = MaybeUninit::uninit();
     cuDeviceGetCount(device_count.as_mut_ptr())
         .result()
@@ -73,7 +73,6 @@ unsafe fn _main() {
             "  Block registers:    {:>15}",
             PrintWithDots(properties.regsPerBlock)
         );
-        println!();
         let mut warp_size = MaybeUninit::uninit();
         cuDeviceGetAttribute(
             warp_size.as_mut_ptr(),
@@ -102,6 +101,7 @@ unsafe fn _main() {
             "  SIMD width:         {:>15}",
             PrintWithDots(properties.SIMDWidth)
         );
+        println!();
     }
 }
 
